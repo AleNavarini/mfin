@@ -4,10 +4,8 @@ version = "0.1.0"
 description = "Backtest de momentum en Bitcoin con filtro de sentimiento extremo"
 requires-python = ">=3.12,<3.13"
 dependencies = [
-  "matplotlib>=3.10.0",
   "numpy>=2.0.0",
   "pandas>=2.2.0",
-  "plotly>=5.24.0,<6.0.0",
   "requests>=2.32.0",
   "vectorbt>=0.28.0",
 ]

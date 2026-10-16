@@ -18,7 +18,7 @@ from tesina_backtest.backtest import BacktestResult, run_backtest
 # Carpeta de resultados y parámetros por defecto.
 from tesina_backtest.config import RESULTS_DIR, BacktestConfig
 
-# Función que guarda los CSV (y opcionalmente los gráficos) de una corrida.
+# Función que guarda los CSV de una corrida.
 from tesina_backtest.reporting import save_results
 
 # Modos del filtro y función que calcula las señales.
@@ -176,7 +176,7 @@ def _comparison_table(summary: pd.DataFrame) -> pd.DataFrame:
     return table.sort_values("avg_dSharpe", ascending=False).reset_index()
 
 
-def run_grid(dataset: pd.DataFrame, base: BacktestConfig, figures: bool) -> None:
+def run_grid(dataset: pd.DataFrame, base: BacktestConfig) -> None:
 
     # Carpeta de salida según si la corrida incluye costos o no.
     output_dir = RESULTS_DIR / ("con_costos" if base.apply_costs else "sin_costos")
@@ -188,7 +188,7 @@ def run_grid(dataset: pd.DataFrame, base: BacktestConfig, figures: bool) -> None
         # Calcula señales y corre el backtest.
         result = run_backtest(build_signals(dataset, config), config)
         # Guarda el detalle diario, las métricas y los retornos por año en runs/<nombre>/.
-        save_results(result, output_dir / "runs" / _run_name(config), figures)
+        save_results(result, output_dir / "runs" / _run_name(config))
         # Agrega la fila de resumen de esta configuración.
         rows.append(_summary_row(result, config))
 

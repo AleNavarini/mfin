@@ -23,7 +23,6 @@ UV_PROJECT_ENVIRONMENT=~/.venvs/tesina uv sync --python 3.12
 ```bash
 uv run python -m tesina_backtest                 # grilla completa con costos (~15 segundos)
 uv run python -m tesina_backtest --sin-costos    # la misma grilla con retornos brutos
-uv run python -m tesina_backtest --graficos      # además genera los gráficos de cada configuración
 uv run python -m tesina_backtest --refresh       # vuelve a descargar los datos
 ```
 
@@ -49,7 +48,7 @@ src/tesina_backtest/
 ├── strategy.py        # señal de momentum, volatilidad, régimen del CFGI y posiciones
 ├── backtest.py        # retornos con o sin costos, y métricas
 ├── grid.py            # grilla de configuraciones, tabla resumen y comparación
-└── reporting.py       # CSV y gráficos de un backtest
+└── reporting.py       # CSV de un backtest
 ```
 
 ## Datos
@@ -147,6 +146,6 @@ Los juegos de percentiles de la grilla están en `grid.QUANTILE_SETS`, en el ord
 
 ## Resultados
 
-Cada configuración guarda en su carpeta de `runs/` los archivos `metrics.csv`, `daily_returns.csv`, `backtest_daily.csv`, `annual_returns.csv` y `annual_volatility.csv`, y con `--graficos` también `figures/`. Las columnas `strategy` y `momentum` son netas o brutas según la carpeta (`con_costos` o `sin_costos`).
+Cada configuración guarda en su carpeta de `runs/` los archivos `metrics.csv`, `daily_returns.csv`, `backtest_daily.csv`, `annual_returns.csv` y `annual_volatility.csv`. Las columnas `strategy` y `momentum` son netas o brutas según la carpeta (`con_costos` o `sin_costos`).
 
 En `comparacion.csv` cada columna es una diferencia contra el momentum puro de la misma ventana. `dSh_*`, `avg_dSharpe` y `avg_dRet` son filtro menos momentum. `avg_dMaxDD` también es filtro menos momentum, y como el drawdown es negativo, un valor positivo indica una caída menor del filtro. `avg_dVol` es momentum menos filtro, así que un valor positivo indica menor volatilidad del filtro. `wins_Sharpe` cuenta en cuántas de las cinco ventanas el filtro supera al momentum puro en Sharpe.

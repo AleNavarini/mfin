@@ -86,7 +86,7 @@ def calculate_cfgi_risk_regime(
         # Guarda 1.0 si el estado es normal y 0.0 si es pánico o euforia.
         regime.loc[date] = float(state == "normal")
 
-    # Devuelve el régimen diario y los umbrales (para los gráficos).
+    # Devuelve el régimen diario y los umbrales.
     return regime, thresholds
 
 
