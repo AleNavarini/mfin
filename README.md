@@ -21,17 +21,21 @@ UV_PROJECT_ENVIRONMENT=~/.venvs/tesina uv sync --python 3.12
 ## Ejecución
 
 ```bash
-uv run python -m tesina_backtest todo        # los cuatro análisis en orden (~1 minuto)
-uv run python -m tesina_backtest base        # un análisis en particular
-uv run python -m tesina_backtest base --refresh   # vuelve a descargar los datos
+uv run python -m tesina_backtest                 # grilla completa con costos (~15 segundos)
+uv run python -m tesina_backtest --sin-costos    # la misma grilla con retornos brutos
+uv run python -m tesina_backtest --graficos      # además genera los gráficos de cada configuración
+uv run python -m tesina_backtest --refresh       # vuelve a descargar los datos
 ```
 
-| Comando | Módulo | Qué evalúa | Salida |
-|---|---|---|---|
-| `base` | `analyses/base.py` | Regla original (pánico y euforia, percentiles 10/20 y 80/90, ventana de 90 días) contra momentum puro | `results/*.csv`, `results/figures/` |
-| `ventanas` | `analyses/momentum_windows.py` | La regla original con ventanas de momentum de 30, 60, 90, 180 y 365 días | `results/robustez/metrics_summary.csv`, `results/robustez/momentum_<n>/` |
-| `filtros` | `analyses/cfgi_filters.py` | Grilla de 5 ventanas × 3 modos (ambos, pánico, euforia) × 4 juegos de percentiles, más el momentum puro | `results/robustez/cfgi_*.csv` |
-| `costos` | `analyses/costs.py` | Resultados netos de comisiones, slippage y funding, y rotación e ingreso por funding de la regla original y del filtro de pánico 20/30 | `results/costos/cost_grid_net.csv`, `results/costos/turnover_funding.csv` |
+Cada ejecución corre una sola grilla de configuraciones (`grid.py`): 5 ventanas de momentum (30, 60, 90, 180 y 365 días) × 3 modos del filtro (ambos, pánico, euforia) × 4 juegos de percentiles, más el momentum puro de cada ventana. Son 65 backtests. La regla original es la configuración de 90 días, modo `both` y percentiles 10/20/80/90.
+
+`apply_costs` en `BacktestConfig` prende o apaga los costos. Con costos, los retornos descuentan comisiones y slippage y suman o restan el funding. Sin costos, son brutos. La salida va a `results/con_costos/` o a `results/sin_costos/`:
+
+| Archivo | Contenido |
+|---|---|
+| `grilla.csv` | Una fila por configuración, con las métricas de la estrategia filtrada y del momentum puro, días en refugio, exposición promedio, rotación, funding y días en corto |
+| `comparacion.csv` | Diferencias contra el momentum puro de cada combinación de modo y percentiles, por ventana y en promedio |
+| `runs/<ventana>_<modo>_<percentiles>/` | Detalle de cada configuración, por ejemplo `runs/90_both_0.10-0.20-0.80-0.90/` |
 
 Las carpetas `data/` y `results/` no están versionadas. La primera ejecución descarga las cuatro series de las APIs públicas y las guarda en `data/raw/`. Las siguientes usan esos CSV, salvo que se pase `--refresh`. Como el período está cortado en `end_date`, los resultados solo cambian si alguna fuente revisa datos históricos.
 
@@ -39,14 +43,13 @@ Las carpetas `data/` y `results/` no están versionadas. La primera ejecución d
 
 ```
 src/tesina_backtest/
-├── __main__.py        # CLI: elige y ejecuta los análisis
+├── __main__.py        # CLI: corre la grilla con o sin costos
 ├── config.py          # BacktestConfig con todos los parámetros, y rutas
 ├── data.py            # descarga, cache y alineación de las cuatro series
 ├── strategy.py        # señal de momentum, volatilidad, régimen del CFGI y posiciones
-├── backtest.py        # retornos brutos y netos, y métricas
-├── experiments.py     # ventanas, juegos de percentiles y helpers compartidos
-├── reporting.py       # CSV y gráficos de un backtest
-└── analyses/          # un módulo por análisis, cada uno con run(dataset)
+├── backtest.py        # retornos con o sin costos, y métricas
+├── grid.py            # grilla de configuraciones, tabla resumen y comparación
+└── reporting.py       # CSV y gráficos de un backtest
 ```
 
 ## Datos
@@ -116,7 +119,7 @@ La rotación anual es la suma de `|posición_t − posición_t−1|` dividida po
 
 ## Parámetros
 
-Todos los parámetros están en `BacktestConfig` (`config.py`). Los análisis crean variantes con `dataclasses.replace` o con `experiments.filter_config`.
+Todos los parámetros están en `BacktestConfig` (`config.py`). `grid.grid_configs` crea cada configuración de la grilla con `dataclasses.replace`.
 
 | Parámetro | Valor | Descripción |
 |---|---|---|
@@ -130,9 +133,10 @@ Todos los parámetros están en `BacktestConfig` (`config.py`). Los análisis cr
 | `euphoria_exit_quantile`, `euphoria_enter_quantile` | 0,80, 0,90 | Umbrales de euforia |
 | `filter_mode` | `both` | Extremos que activan el refugio |
 | `no_trade_band` | 0,10 | Cambio mínimo de exposición para rebalancear |
+| `apply_costs` | `True` | Descuenta costos y funding de los retornos |
 | `spot_fee_bps`, `perp_fee_bps`, `slippage_bps` | 10, 5, 2 | Costos por lado |
 
-Los juegos de percentiles de la grilla están en `experiments.QUANTILE_SETS`, en el orden (entrada pánico, salida pánico, salida euforia, entrada euforia):
+Los juegos de percentiles de la grilla están en `grid.QUANTILE_SETS`, en el orden (entrada pánico, salida pánico, salida euforia, entrada euforia):
 
 | Juego | Pánico | Euforia |
 |---|---|---|
@@ -143,6 +147,6 @@ Los juegos de percentiles de la grilla están en `experiments.QUANTILE_SETS`, en
 
 ## Resultados
 
-Cada backtest guarda en su carpeta `metrics.csv`, `daily_returns.csv`, `backtest_daily.csv`, `annual_returns.csv` y `annual_volatility.csv`, más los gráficos en `figures/`. Las columnas `strategy` y `momentum` son brutas y las terminadas en `_net` incluyen costos y funding.
+Cada configuración guarda en su carpeta de `runs/` los archivos `metrics.csv`, `daily_returns.csv`, `backtest_daily.csv`, `annual_returns.csv` y `annual_volatility.csv`, y con `--graficos` también `figures/`. Las columnas `strategy` y `momentum` son netas o brutas según la carpeta (`con_costos` o `sin_costos`).
 
-En las tablas de comparación (`cfgi_vs_momentum_table.csv`) cada columna es una diferencia contra el momentum puro de la misma ventana. `dSh_*`, `avg_dSharpe` y `avg_dRet` son filtro menos momentum. `avg_dMaxDD` también es filtro menos momentum, y como el drawdown es negativo, un valor positivo indica una caída menor del filtro. `avg_dVol` es momentum menos filtro, así que un valor positivo indica menor volatilidad del filtro.
+En `comparacion.csv` cada columna es una diferencia contra el momentum puro de la misma ventana. `dSh_*`, `avg_dSharpe` y `avg_dRet` son filtro menos momentum. `avg_dMaxDD` también es filtro menos momentum, y como el drawdown es negativo, un valor positivo indica una caída menor del filtro. `avg_dVol` es momentum menos filtro, así que un valor positivo indica menor volatilidad del filtro. `wins_Sharpe` cuenta en cuántas de las cinco ventanas el filtro supera al momentum puro en Sharpe.
