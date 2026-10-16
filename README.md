@@ -86,7 +86,7 @@ El régimen tiene histéresis. Con la configuración original:
 - Se entra en pánico cuando el CFGI cae a su percentil 10 o menos, y se sale cuando vuelve a su percentil 20 o más.
 - Se entra en euforia cuando el CFGI llega a su percentil 90 o más, y se sale cuando vuelve a su percentil 80 o menos.
 
-Fuera del régimen normal la estrategia filtrada no tiene exposición a BTC. `filter_mode` define qué extremos se usan: `both`, `panic`, `euphoria` o `none`. Las columnas `p10`, `p20`, `p80` y `p90` de los resultados guardan los umbrales configurados aunque los percentiles sean otros.
+Fuera del régimen normal la estrategia filtrada no tiene exposición a BTC. `filter_mode` define qué extremos se usan: `both`, `panic`, `euphoria` o `none`. Las columnas `panic_enter`, `panic_exit`, `euphoria_exit` y `euphoria_enter` de los resultados guardan los umbrales de cada día.
 
 ### Ejecución y retornos
 

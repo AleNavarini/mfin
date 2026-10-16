@@ -117,7 +117,7 @@ def _plot_positions(frame: pd.DataFrame, figures_dir: Path) -> None:
 def _plot_cfgi(frame: pd.DataFrame, figures_dir: Path) -> None:
 
     # El CFGI y sus cuatro umbrales históricos.
-    columns = ["cfgi", "p10", "p20", "p80", "p90"]
+    columns = ["cfgi", "panic_enter", "panic_exit", "euphoria_exit", "euphoria_enter"]
     axis = frame[columns].plot(
         figsize=(12, 6),
         title="CFGI y umbrales históricos",
@@ -242,10 +242,10 @@ def _plot_interactive_cfgi(frame: pd.DataFrame, figures_dir: Path) -> None:
     # Una línea para el CFGI y una para cada umbral.
     for column, name in {
         "cfgi": "CFGI",
-        "p10": "p10",
-        "p20": "p20",
-        "p80": "p80",
-        "p90": "p90",
+        "panic_enter": "Entrada pánico",
+        "panic_exit": "Salida pánico",
+        "euphoria_exit": "Salida euforia",
+        "euphoria_enter": "Entrada euforia",
     }.items():
         figure.add_trace(go.Scatter(x=frame.index, y=frame[column], name=name, mode="lines"))
     # Eje Y fijo de 0 a 100 y todos los valores juntos al pasar el mouse.

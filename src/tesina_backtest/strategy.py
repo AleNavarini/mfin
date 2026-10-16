@@ -39,13 +39,13 @@ def calculate_cfgi_risk_regime(
     thresholds = pd.DataFrame(
         {
             # Umbral para entrar en pánico.
-            "p10": history.quantile(config.panic_enter_quantile),
+            "panic_enter": history.quantile(config.panic_enter_quantile),
             # Umbral para salir del pánico.
-            "p20": history.quantile(config.panic_exit_quantile),
+            "panic_exit": history.quantile(config.panic_exit_quantile),
             # Umbral para salir de la euforia.
-            "p80": history.quantile(config.euphoria_exit_quantile),
+            "euphoria_exit": history.quantile(config.euphoria_exit_quantile),
             # Umbral para entrar en euforia.
-            "p90": history.quantile(config.euphoria_enter_quantile),
+            "euphoria_enter": history.quantile(config.euphoria_enter_quantile),
         },
         index=cfgi.index,
     )
@@ -68,18 +68,18 @@ def calculate_cfgi_risk_regime(
         # Valor del CFGI de ese día.
         value = cfgi.loc[date]
 
-        # Desde normal, entra en pánico si el CFGI cae al percentil 10 o menos.
-        if state == "normal" and uses_panic and value <= row["p10"]:
+        # Desde normal, entra en pánico si el CFGI cae al umbral de entrada al pánico o menos.
+        if state == "normal" and uses_panic and value <= row["panic_enter"]:
             state = "panic"
 
-        # Desde normal, entra en euforia si el CFGI sube al percentil 90 o más.
-        elif state == "normal" and uses_euphoria and value >= row["p90"]:
+        # Desde normal, entra en euforia si el CFGI sube al umbral de entrada a la euforia o más.
+        elif state == "normal" and uses_euphoria and value >= row["euphoria_enter"]:
             state = "euphoria"
 
-        # Vuelve a normal si sale del pánico (CFGI >= p20) o de la euforia (CFGI <= p80).
+        # Vuelve a normal si el CFGI cruza el umbral de salida del pánico o de la euforia.
         # Como los umbrales de salida son distintos de los de entrada, no hay idas y vueltas diarias.
-        elif (state == "panic" and value >= row["p20"]) or (
-            state == "euphoria" and value <= row["p80"]
+        elif (state == "panic" and value >= row["panic_exit"]) or (
+            state == "euphoria" and value <= row["euphoria_exit"]
         ):
             state = "normal"
 
@@ -167,7 +167,7 @@ def build_signals(dataset: pd.DataFrame, config: BacktestConfig) -> pd.DataFrame
     # Calcula el régimen del CFGI (1 = opera, 0 = refugio) y los umbrales diarios.
     regime, thresholds = calculate_cfgi_risk_regime(frame["cfgi"], config)
 
-    # Agrega las columnas p10, p20, p80 y p90 a la tabla.
+    # Agrega las columnas de los cuatro umbrales a la tabla.
     frame = frame.join(thresholds)
     # Agrega el régimen a la tabla.
     frame["risk_regime"] = regime
