@@ -1,0 +1,25 @@
+# Entorno y caches
+.venv/
+__pycache__/
+.ruff_cache/
+.pytest_cache/
+*.pyc
+*.egg-info/
+.DS_Store
+
+# Documentos de la tesina, fuera del código
+entregas/
+docs/
+
+# Copias anteriores del proyecto
+project/
+project.zip
+
+# Configuración local de Claude Code
+.claude/
+
+# Datos descargados, se regeneran al ejecutar los análisis
+data/
+
+# Salidas de los análisis, se regeneran con python -m tesina_backtest todo
+results/
