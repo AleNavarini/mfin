@@ -83,7 +83,7 @@ Fuera del régimen normal la estrategia filtrada no tiene exposición a BTC. `fi
 
 ### Ejecución y retornos
 
-La señal se calcula con el cierre del día t y la posición se mantiene durante el día t+1. Por eso `strategy_position` y `momentum_position` son la señal desplazada un día, y `risk_regime_held` es el régimen vigente durante el día.
+La posición del día t+1 se decide a las 00:00 UTC de t+1 con el cierre del día t y el CFGI del día t+1, que Alternative.me publica en ese mismo instante. Se ejecuta en ese momento y se mantiene durante todo el día t+1, así que captura el retorno entre el cierre de t y el cierre de t+1. Por eso `risk_regime` en la fila t es el régimen de t+1, `strategy_position` y `momentum_position` son la señal desplazada un día, y `risk_regime_held` es el régimen vigente durante el día.
 
 El retorno diario es `posición × retorno simple de BTC + (1 − |posición|) × retorno del refugio`. El refugio rinde DTB3 convertida a tasa diaria compuesta, `(1 + DTB3/100)^(1/365) − 1`, con piso en cero.
 

@@ -110,8 +110,10 @@ def build_signals(dataset: pd.DataFrame, config: BacktestConfig) -> pd.DataFrame
     tope en 1. La estrategia con CFGI lleva la exposición a cero cuando el régimen está
     en pánico o euforia. Ambos objetivos pasan por la banda de no operación.
 
-    La posición decidida al cierre del día t se mantiene durante t+1, por eso las
-    columnas `*_position` y `risk_regime_held` están corridas un día respecto de las señales.
+    La posición se decide a las 00:00 UTC de t+1 con el cierre de t y el CFGI de t+1, que
+    Alternative.me publica en ese instante. Por eso `risk_regime` en la fila t es el
+    régimen de t+1. La posición se ejecuta en ese momento y se mantiene durante t+1, así
+    que `*_position` y `risk_regime_held` están corridas un día respecto de las señales.
 
     Args:
         dataset: Dataset diario de `load_dataset`.
@@ -147,7 +149,7 @@ def build_signals(dataset: pd.DataFrame, config: BacktestConfig) -> pd.DataFrame
 
     regime, thresholds = calculate_cfgi_risk_regime(frame["cfgi"], config)
     frame = frame.join(thresholds)
-    frame["risk_regime"] = regime
+    frame["risk_regime"] = regime.shift(-1)
 
     momentum_target = frame["direction"] * frame["scaled_exposure"]
     strategy_target = momentum_target * frame["risk_regime"]
