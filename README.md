@@ -12,12 +12,6 @@ Requiere Python 3.12 y [uv](https://docs.astral.sh/uv/).
 uv sync --python 3.12
 ```
 
-Si el proyecto está en una carpeta sincronizada con iCloud, conviene crear el entorno fuera de ella:
-
-```bash
-UV_PROJECT_ENVIRONMENT=~/.venvs/tesina uv sync --python 3.12
-```
-
 ## Ejecución
 
 ```bash
